@@ -1,0 +1,58 @@
+services:
+  # --- Microsserviços ---
+  service-a:
+    build: ./app
+    environment:
+      - OTEL_SERVICE_NAME=service-a
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - UPSTREAM_URL=http://service-b:8001/api/data
+      - PORT=8000
+    ports:
+      - "8000:8000"
+
+  service-b:
+    build: ./app
+    environment:
+      - OTEL_SERVICE_NAME=service-b
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - PORT=8001
+    ports:
+      - "8001:8001"
+
+  # --- Stack de Observabilidade ---
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./otel-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "8889:8889" # Prometheus metrics endpoint
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"
+
+  loki:
+    image: grafana/loki:latest
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    ports:
+      - "3000:3000"
