@@ -8,13 +8,11 @@ exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
   
-  # AJUSTE: Mudou de otlp/tempo para otlp_grpc/tempo
   otlp_grpc/tempo:
     endpoint: "tempo:4317"
     tls:
       insecure: true
 
-  # AJUSTE: Mudou de otlphttp/loki para otlp_http/loki
   otlp_http/loki:
     endpoint: "http://loki:3100/otlp"
     tls:
@@ -28,7 +26,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp_grpc/tempo] # Atualizado aqui
+      exporters: [otlp_grpc/tempo] 
     metrics:
       receivers: [otlp]
       processors: [batch]
@@ -36,4 +34,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp_http/loki] # Atualizado aqui
+      exporters: [otlp_http/loki]
